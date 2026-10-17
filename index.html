@@ -22,16 +22,16 @@ button.p{background:var(--pri);color:var(--prit);border-color:var(--pri);font-we
 .hint{font-size:12px;color:var(--mut);margin:6px 0}.thumb{max-width:100%;max-height:90px;margin-top:8px;border:1px solid var(--bd);border-radius:6px;background:#fff}
 .tb{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}.tb th,.tb td{border-bottom:1px solid var(--bd);padding:7px 8px;text-align:left;vertical-align:top}.tb th{color:var(--mut);font-weight:600}
 #login{padding:16px}.wrap{overflow-x:auto}
-#paper{width:210mm;min-height:297mm;background:#fff;color:#000;padding:8mm 20mm 20mm;margin:0 auto;font:12pt/1.4 "Times New Roman",Times,serif;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+#paper{font:12pt/1.4 "Times New Roman",Times,serif;color:#000}#paper .pg{width:210mm;height:297mm;background:#fff;padding:4mm 20mm 20mm;margin:0 auto 12px;box-shadow:0 2px 12px rgba(0,0,0,.25);overflow:hidden;box-sizing:border-box}#paper .pg.pn{padding-top:20mm}#paper .in{display:flow-root}
 #paper .kop{display:block;width:calc(100% + 16mm);margin:0 -8mm 8mm}#paper .kopph{height:30mm;margin-bottom:8mm}
 #paper h2{text-align:center;font-size:14pt;margin:0 0 2px;text-decoration:underline}
-#paper .no{text-align:center;margin:0 0 14pt}#paper p{margin:0 0 10pt;text-align:justify;text-indent:8mm;white-space:pre-wrap}
+#paper .no{text-align:center;margin:0 0 14pt}#paper p{margin:0 0 10pt;text-align:justify;text-indent:12mm;white-space:pre-wrap}
 #paper p.ni{text-indent:0}#paper table{border-collapse:collapse;margin:0 0 10pt 10mm;width:calc(100% - 10mm)}
 #paper td{vertical-align:top;padding:1px 0}#paper td:nth-child(1){width:32mm}#paper td:nth-child(2){width:5mm}
 #paper .ttd{margin:18pt 0 0 auto;width:75mm;text-align:left}#paper .ttd img{display:block;max-height:28mm;max-width:60mm}
-#paper .sg{height:26mm;position:relative}#paper .sg img{position:absolute;left:0;top:0}#paper .sg img.st{left:18mm;opacity:.85}
-#paper mark.ph{background:#fde68a;color:#000}.cap #paper{box-shadow:none}.cap #paper mark.ph{background:none}
-@media print{@page{size:A4;margin:0}body{background:#fff}header,.form{display:none!important}main{display:block;padding:0}.preview{border:0;padding:0;background:none}.wrap{overflow:visible}#paper{box-shadow:none;margin:0}#paper mark.ph{background:none}}
+#paper .sg{height:26mm;position:relative}#paper .sg img{position:absolute;left:0;top:0;z-index:2}#paper .sg img.st{left:0;top:-6mm;width:41mm;height:41mm;max-width:none;max-height:none;object-fit:contain;opacity:.85;z-index:1}#paper p.sp{text-align-last:justify}
+#paper mark.ph{background:#fde68a;color:#000}.cap #paper .pg{box-shadow:none}.cap #paper mark.ph{background:none}
+@media print{@page{size:A4;margin:0}body{background:#fff}header,.form{display:none!important}main{display:block;padding:0}.preview{border:0;padding:0;background:none}.wrap{overflow:visible}#paper .pg{box-shadow:none;margin:0;height:296.5mm;break-after:page}#paper .pg:last-child{break-after:auto}#paper mark.ph{background:none}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -74,13 +74,18 @@ async function api(a,d={}){const r=await fetch(API_URL,{method:'POST',headers:{'
 function showLogin(){$('#login').style.display='';$('#app').style.display='none'}
 function msg(t){const m=$('#msg');m.textContent=t;setTimeout(()=>m.textContent='',3000)}
 const saveSet=()=>{clearTimeout(tm);tm=setTimeout(()=>api('simpanPengaturan',{tempat:S.tempat,jabatanTtd:S.jabatanTtd,namaTtd:S.namaTtd,signer:S.signer}).catch(e=>msg(e.message)),900)};
-async function boot(){const m=await api('muat'),p=m.pengaturan||{};
+const clrCache=()=>{try{Object.keys(localStorage).filter(x=>x.startsWith('ms_a_')).forEach(x=>localStorage.removeItem(x))}catch(e){}};
+const kecil=(d,max,jpg)=>new Promise((ok,no)=>{const im=new Image();im.onerror=no;im.onload=()=>{const s=Math.min(1,max/im.naturalWidth),c=document.createElement('canvas');c.width=im.naturalWidth*s;c.height=im.naturalHeight*s;const x=c.getContext('2d');if(jpg){x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height)}x.drawImage(im,0,0,c.width,c.height);ok(c.toDataURL(jpg?'image/jpeg':'image/png',.9))};im.src=d});
+async function muatAset(k,id){if(!id)return;let d='';try{d=localStorage.getItem('ms_a_'+id)||''}catch(e){}
+if(!d){try{d=await api('aset',{jenis:k});try{localStorage.setItem('ms_a_'+id,d)}catch(e){}}catch(e){return}}
+S[k]=d;if(k=='kop')setKop();if(S.step==1||S.step==5)form();if(S.step<6)preview()}
+async function boot(){const [m,ar]=await Promise.all([api('muat'),api('listArsip')]),p=m.pengaturan||{};
 SETK.forEach(k=>{if(p[k])S[k]=p[k]});if(p.signer)try{S.signer=JSON.parse(p.signer)}catch(e){}
-S.kop=m.aset.kop||'';S.ttd=m.aset.ttd||'';S.stempel=m.aset.stempel||'';
 (m.jenis||[]).forEach(j=>CATS[j.kunci]={n:j.nama,d:j.deskripsi||'Jenis surat buatan sendiri',custom:1,title:j.judul,intro:j.pengantar,signerOn:+j.tampilPenandatangan,subj:JSON.parse(j.labelIdentitas||'[]'),body:j.isi});
-A=await api('listArsip');$('#login').style.display='none';$('#app').style.display='';$('#who').textContent=m.nama;form();preview()}
+A=ar;$('#login').style.display='none';$('#app').style.display='';$('#who').textContent=m.nama;form();preview();
+['kop','ttd','stempel'].forEach(k=>muatAset(k,p['aset_'+k]))}
 $('#lg').onclick=async()=>{const b=$('#lg');$('#le').textContent='';if(API_URL.includes('GANTI')){$('#le').textContent='API_URL belum diisi di index.html';return}
-b.disabled=true;try{const r=await api('login',{username:$('#lu').value.trim(),password:$('#lp').value});TOKEN=r.token;try{localStorage.setItem('ms_token',TOKEN)}catch(e){}await boot()}catch(e){$('#le').textContent=e.message}b.disabled=false};
+b.disabled=true;b.textContent='Memuat…';try{const r=await api('login',{username:$('#lu').value.trim(),password:$('#lp').value});TOKEN=r.token;try{localStorage.setItem('ms_token',TOKEN)}catch(e){}await boot()}catch(e){$('#le').textContent=e.message}b.disabled=false;b.textContent='Masuk'};
 $('#lp').onkeydown=e=>{if(e.key=='Enter')$('#lg').click()};
 $('#out').onclick=()=>{TOKEN='';try{localStorage.removeItem('ms_token')}catch(e){}showLogin()};
 const inp=(l,k,t='text')=>`<label>${l}</label><input type="${t}" data-k="${k}" value="${esc(S[k])}">`;
@@ -88,7 +93,7 @@ const rows=(id,a)=>a.map((r,i)=>`<div class="row"><input data-r="${id}" data-i="
 const img=(l,k)=>`<label>${l}</label><input type="file" accept="image/*" data-img="${k}">${S[k]?`<img class="thumb" src="${S[k]}"><br><button class="b" data-clr="${k}" style="margin-top:6px">Hapus gambar</button>`:''}`;
 const pos=()=>/\{identitas\}/.test(S.body);
 function form(){let h='';
-if(S.step==0)h=`<label>Jenis surat</label><select data-catsel>${Object.entries(CATS).map(([k,v])=>`<option value='${k}' ${S.cat==k?'selected':''}>${esc(v.n)}</option>`).join('')}<option value='__new' ${S.cat=='__new'?'selected':''}>➕ Jenis surat baru…</option></select><p class='hint'>${S.cat=='__new'?'':esc((CATS[S.cat]||{}).d||'')}</p>`+(S.cat=='__new'?inp('Nama jenis surat baru','jenis')+'<p class="hint">Setelah diarsipkan, jenis ini otomatis masuk ke dropdown.</p>':'')+(CATS[S.cat]&&CATS[S.cat].custom?`<button class='b' data-delcat='${S.cat}'>Hapus jenis ini dari dropdown</button>`:'');
+if(S.step==0)h=`<label>Jenis surat</label><select data-catsel>${Object.entries(CATS).map(([k,v])=>`<option value='${k}' ${S.cat==k?'selected':''}>${esc(v.n)}</option>`).join('')}<option value='__new' ${S.cat=='__new'?'selected':''}>➕ Jenis surat baru…</option></select><p class='hint'>${S.cat=='__new'?'':esc((CATS[S.cat]||{}).d||'')}</p>`+(S.cat=='__new'?inp('Nama jenis surat baru','jenis')+'<p class="hint">Setelah diarsipkan, jenis ini otomatis masuk ke dropdown.</p>':'')+(CATS[S.cat]&&CATS[S.cat].custom?`<button class='b' data-delcat='${S.cat}'>Hapus jenis ini dari dropdown</button>`:'')+`<div style='margin-top:14px'><button class='b' data-resetjenis='1'>Reset semua jenis surat</button><p class='hint'>Menghapus semua jenis surat buatan sendiri; jenis bawaan tidak berubah. Arsip tidak ikut terhapus.</p></div>`;
 if(S.step==1)h=img('Upload kop surat (gambar PNG/JPG, lebar penuh kertas)','kop')+'<p class="hint">Kop tersimpan di Google Drive dan dipakai untuk surat berikutnya.</p>';
 if(S.step==2)h=inp('Nomor surat','nomor')+inp('Judul surat','title');
 if(S.step==3)h=`<label><input type="checkbox" data-chk="signerOn" ${S.signerOn?'checked':''} style="width:auto"> Tampilkan identitas penandatangan di awal</label>`+(S.signerOn?'<label>Identitas pembuat surat</label>'+rows('signer',S.signer):'')+inp('Kalimat pengantar identitas penerima','intro')+'<label>Identitas penerima / siswa</label>'+rows('subj',S.subj)+`<label>Posisi identitas penerima</label><select data-pos><option value='awal' ${pos()?'':'selected'}>Sebelum isi surat</option><option value='tengah' ${pos()?'selected':''}>Di tengah paragraf</option></select>`;
@@ -102,20 +107,36 @@ function arsipView(){const js=[...new Set(A.map(r=>r.jenis))],L=A.filter(r=>!S.a
 return `<label>Filter jenis surat</label><select data-af><option value=''>Semua (${A.length})</option>${js.map(j=>`<option ${S.af==j?'selected':''}>${esc(j)}</option>`).join('')}</select>`+(L.length?`<div style='overflow-x:auto'><table class='tb'><tr><th>#</th><th>Jenis</th><th>Nama</th><th>No. Surat</th><th>Diarsipkan</th><th></th></tr>${L.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.jenis)}</td><td>${esc(r.nama||'-')}</td><td>${esc(r.nomorSurat||'-')}</td><td>${esc(new Date(r.waktu).toLocaleString('id-ID'))}<div class='hint'>${esc(r.pembuat)}</div></td><td style='white-space:nowrap'><button class='b' data-pdf='${r.id}'>PDF</button> <button class='b p' data-open='${r.id}'>Buka</button> <button class='b' data-rm='${r.id}'>Hapus</button></td></tr>`).join('')}</table></div>`:'<p class="hint">Belum ada surat di arsip. Klik “💾 Arsipkan” setelah surat selesai.</p>')}
 function tgl(){const d=new Date(S.tanggal+'T00:00');return isNaN(d)?'':`${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`}
 const tbl=a=>a.filter(r=>r[0]).length?'<table>'+a.filter(r=>r[0]).map(r=>`<tr><td>${esc(r[0])}</td><td>:</td><td>${esc(r[1])}</td></tr>`).join('')+'</table>':'';
+function setKop(){S.kopAR='';if(!S.kop)return;const im=new Image();im.onload=()=>{S.kopAR=im.naturalWidth+'/'+im.naturalHeight;preview()};im.src=S.kop}
+const fmt=t=>esc(t).replace(/\u2063/g,'<mark class="ph">').replace(/\u2064/g,'</mark>');
 function preview(){const nm=(S.subj.find(r=>/^nama$/i.test(r[0]))||[0,''])[1]||'[Nama Siswa]';
 const pg=nm.trim().split(/\s+/)[0].toLowerCase().replace(/^./,c=>c.toUpperCase());
-const rep=t=>t.replace(/\{([^{}]+)\}/g,(m,k)=>{k=k.trim().toLowerCase();if(k=='panggilan')return pg;const r=S.subj.find(r=>r[0].trim().toLowerCase()==k);return r?(r[1]||'\u2063['+r[0]+']\u2064'):m});
-const mid=pos();
-const body=S.body.split(/\n\s*\n/).filter(x=>x.trim()).map(x=>x.trim()=='{identitas}'?(S.intro?`<p class="ni">${esc(S.intro)}</p>`:'')+tbl(S.subj):`<p>${esc(rep(x.trim())).replace(/\u2063/g,'<mark class="ph">').replace(/\u2064/g,'</mark>')}</p>`).join('');
-$('#paper').innerHTML=(S.kop?`<img class="kop" src="${S.kop}">`:'<div class="kopph"></div>')+
-`<h2>${esc(S.title)}</h2>`+(S.nomor?`<div class="no">Nomor : ${esc(S.nomor)}</div>`:'<div class="no"></div>')+
-(S.tujuan?`<p class="ni">${esc(S.tujuan)}</p>`:'')+
-(S.signerOn?`<p class="ni">Yang bertandatangan di bawah ini :</p>${tbl(S.signer)}`:'')+
-(mid?'':(S.intro?`<p class="ni">${esc(S.intro)}</p>`:'')+tbl(S.subj))+body+
-`<div class="ttd"><div>${esc(S.tempat)}, ${tgl()}</div><div>${esc(S.jabatanTtd)}</div><div class="sg">${S.ttd?`<img src="${S.ttd}">`:''}${S.stempel?`<img class="st" src="${S.stempel}">`:''}</div><b>${esc(S.namaTtd)}</b></div>`;}
-async function bikinPDF(){document.body.classList.add('cap');try{const c=await html2canvas($('#paper'),{scale:2,backgroundColor:'#fff'});
-const pdf=new jspdf.jsPDF('p','mm','a4'),W=210,ph=c.width*297/W;
-for(let y=0,p=0;y<c.height-2;y+=ph,p++){const part=document.createElement('canvas');part.width=c.width;part.height=Math.min(ph,c.height-y);part.getContext('2d').drawImage(c,0,y,c.width,part.height,0,0,c.width,part.height);if(p)pdf.addPage();pdf.addImage(part.toDataURL('image/jpeg',.92),'JPEG',0,0,W,part.height*W/c.width)}
+const rep=t=>t.replace(/\{([^{}]+)\}/g,(m,k)=>{k=k.trim().toLowerCase();if(k=='panggilan')return pg;const r=S.subj.find(r=>r[0].trim().toLowerCase()==k);return r?(r[1]||'\u2063['+r[0].replace(/ /g,'\u00a0')+']\u2064'):m});
+const mid=pos(),intro=S.intro?`<p class="ni">${esc(S.intro)}</p>`:'',B=[];
+B.push({h:S.kop?`<img class="kop"${S.kopAR?` style="aspect-ratio:${S.kopAR}"`:''} src="${S.kop}">`:'<div class="kopph"></div>'},{h:`<h2>${esc(S.title)}</h2>`},{h:`<div class="no">${S.nomor?'Nomor : '+esc(S.nomor):''}</div>`});
+if(S.tujuan)B.push({h:`<p class="ni">${esc(S.tujuan)}</p>`});
+if(S.signerOn)B.push({h:'<p class="ni">Yang bertandatangan di bawah ini :</p>'},{h:tbl(S.signer)});
+if(!mid)B.push({h:intro},{h:tbl(S.subj)});
+S.body.split(/\n\s*\n/).filter(x=>x.trim()).forEach(x=>x.trim()=='{identitas}'?B.push({h:intro},{h:tbl(S.subj)}):B.push({p:rep(x.trim())}));
+B.push({h:`<div class="ttd"><div>${esc(S.tempat)}, ${tgl()}</div><div>${esc(S.jabatanTtd)}</div><div class="sg">${S.ttd?`<img src="${S.ttd}">`:''}${S.stempel?`<img class="st" src="${S.stempel}">`:''}</div><b>${esc(S.namaTtd)}</b></div>`});
+paginate(B)}
+function paginate(B){const root=$('#paper');root.innerHTML='';
+const pr=document.createElement('div');pr.style.cssText='height:100mm;position:absolute;visibility:hidden';root.appendChild(pr);const MM=pr.offsetHeight/100;root.removeChild(pr);
+let pn=0,inn,lim;
+const np=()=>{const g=document.createElement('div');g.className='pg'+(pn?' pn':'');inn=document.createElement('div');inn.className='in';g.appendChild(inn);root.appendChild(g);lim=(pn?256:272)*MM;pn++};
+const put=h=>{inn.insertAdjacentHTML('beforeend',h);return inn.lastElementChild};
+const mk=(t,first,sp)=>`<p class="${first?'':'ni'}${sp?' sp':''}">${fmt(t)}</p>`;
+np();
+for(const b of B){
+if(b.p!==undefined){let txt=b.p,first=true;
+while(txt){let el=put(mk(txt,first,0));if(inn.offsetHeight<=lim)break;inn.removeChild(el);
+const w=txt.split(' ');let lo=0,hi=w.length-1;
+while(lo<hi){const m=Math.ceil((lo+hi)/2);el=put(mk(w.slice(0,m).join(' '),first,1));const ok=inn.offsetHeight<=lim;inn.removeChild(el);if(ok)lo=m;else hi=m-1}
+if(!lo){if(!inn.children.length){put(mk(txt,first,0));break}np();continue}
+put(mk(w.slice(0,lo).join(' '),first,1));txt=w.slice(lo).join(' ');first=false;np()}}
+else if(b.h){const el=put(b.h);if(inn.offsetHeight>lim&&inn.children.length>1){inn.removeChild(el);np();put(b.h)}}}}
+async function bikinPDF(){document.body.classList.add('cap');try{const pdf=new jspdf.jsPDF('p','mm','a4');const pgs=[...document.querySelectorAll('#paper .pg')];
+for(let i=0;i<pgs.length;i++){const c=await html2canvas(pgs[i],{scale:2,backgroundColor:'#fff'});if(i)pdf.addPage();pdf.addImage(c.toDataURL('image/jpeg',.92),'JPEG',0,0,210,297)}
 return pdf.output('datauristring').split(',')[1]}finally{document.body.classList.remove('cap')}}
 async function arsip(){if(S.step==6)go(5);const nm=(S.cat=='__new'?S.jenis||'':CATS[S.cat].n).trim();if(!nm){msg('Isi nama jenis surat dulu');go(0);return}
 const b=$('#arsip');b.disabled=true;msg('Menyimpan ke Drive…');
@@ -124,7 +145,7 @@ const data={};['title','nomor','tujuan','intro','signerOn','signer','subj','body
 const n=(S.subj.find(r=>/^nama$/i.test(r[0]))||[0,''])[1];
 await api('arsipkan',{jenis:nm,kunci:S.cat,nama:n,nomor:S.nomor,data,pdf:await bikinPDF()});A=await api('listArsip');msg('Diarsipkan ke Drive ✓');form()}
 catch(e){msg('Gagal: '+e.message)}b.disabled=false}
-function go(n){S.step=Math.max(0,Math.min(6,n));form()}
+function go(n){S.step=Math.max(0,Math.min(6,n));form();if(S.step<6)preview()}
 document.addEventListener('input',e=>{const t=e.target;
 if(t.dataset.k){S[t.dataset.k]=t.value}else if(t.dataset.r){S[t.dataset.r][t.dataset.i][t.dataset.j]=t.value}else return;
 if(SETK.includes(t.dataset.k)||t.dataset.r=='signer')saveSet();preview()});
@@ -133,13 +154,14 @@ if(t.dataset.chk){S[t.dataset.chk]=t.checked?1:0;form();preview()}
 if(t.dataset.catsel!==undefined){const v=t.value;if(v=='__new'){applyCat('umum');S.cat='__new';S.jenis='';S.title='SURAT'}else applyCat(v);form();preview()}
 if(t.dataset.pos!==undefined){const ps=S.body.split(/\n\s*\n/);if(t.value=='tengah'){if(!pos()){ps.splice(1,0,'{identitas}');S.body=ps.join('\n\n')}}else S.body=ps.filter(x=>x.trim()!='{identitas}').join('\n\n');form();preview()}
 if(t.dataset.af!==undefined){S.af=t.value;form()}
-if(t.dataset.img&&t.files[0]){const k=t.dataset.img,r=new FileReader();r.onload=()=>{S[k]=r.result;form();preview();api('simpanAset',{jenis:k,dataUrl:r.result}).then(()=>msg('Tersimpan di Drive ✓')).catch(e=>msg(e.message))};r.readAsDataURL(t.files[0])}});
+if(t.dataset.img&&t.files[0]){const k=t.dataset.img,r=new FileReader();r.onload=async()=>{let d=r.result;try{d=await kecil(d,k=='kop'?1600:800,k=='kop')}catch(e){}S[k]=d;clrCache();if(k=='kop')setKop();form();preview();api('simpanAset',{jenis:k,dataUrl:d}).then(()=>msg('Tersimpan di Drive ✓')).catch(e=>msg(e.message))};r.readAsDataURL(t.files[0])}});
 document.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
 try{
 if(d.ins){const ta=$('[data-k=body]'),tx=d.ins=='identitas'?'\n\n{identitas}\n\n':'{'+d.ins+'}',a=ta.selectionStart,b=ta.selectionEnd;ta.value=ta.value.slice(0,a)+tx+ta.value.slice(b);S.body=ta.value;ta.focus();ta.selectionStart=ta.selectionEnd=a+tx.length;preview()}
 else if(d.open){const r=await api('bukaArsip',{id:d.open});Object.assign(S,r.data);S.cat=CATS[r.cat]?r.cat:'__new';S.jenis=r.jenis;go(3);preview();msg('Surat dibuka dari arsip')}
 else if(d.pdf){msg('Mengunduh…');const r=await api('unduh',{id:d.pdf}),a=document.createElement('a');a.href='data:application/pdf;base64,'+r.pdf;a.download=r.nama;a.click();msg('')}
 else if(d.rm){if(confirm('Hapus surat ini dari arsip dan Drive?')){await api('hapusArsip',{id:d.rm});A=A.filter(x=>x.id!=d.rm);form()}}
+else if(d.resetjenis){if(confirm('Hapus semua jenis surat buatan sendiri?')){await api('resetJenis');Object.keys(CATS).forEach(k=>{if(CATS[k].custom)delete CATS[k]});applyCat('kuliah');form();preview();msg('Jenis surat direset')}}
 else if(d.delcat){await api('hapusJenis',{kunci:d.delcat});delete CATS[d.delcat];applyCat('kuliah');form();preview()}
 else if(d.s!==undefined)go(+d.s);
 else if(d.add){S[d.add].push(['','']);if(d.add=='signer')saveSet();form();preview()}
