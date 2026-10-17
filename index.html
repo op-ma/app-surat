@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Master Surat</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#1d2330;--mut:#667085;--bd:#d8dce3;--pri:#0f766e;--prit:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1d222a;--tx:#e8ebf0;--mut:#98a2b3;--bd:#343b46;--pri:#2dd4bf;--prit:#04201c;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{padding:12px 18px;border-bottom:1px solid var(--bd);background:var(--card);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+h1{font-size:17px;margin:0}main{display:grid;grid-template-columns:1fr;gap:16px;padding:16px;max-width:860px;margin:auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px}
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.steps button{flex:1 1 auto;font-size:12px;padding:6px 8px;border:1px solid var(--bd);background:transparent;color:var(--mut);border-radius:20px;cursor:pointer}
+.steps button.on{background:var(--pri);color:var(--prit);border-color:var(--pri);font-weight:600}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 3px}
+input,textarea,select{width:100%;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+textarea{min-height:90px;resize:vertical}
+button.b{padding:8px 14px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer;font:inherit}
+button.p{background:var(--pri);color:var(--prit);border-color:var(--pri);font-weight:600}button:disabled{opacity:.5}
+.nav{display:flex;justify-content:space-between;gap:8px;margin-top:16px}
+.row{display:grid;grid-template-columns:1fr 1.6fr auto;gap:6px;margin-bottom:6px}
+.hint{font-size:12px;color:var(--mut);margin:6px 0}.thumb{max-width:100%;max-height:90px;margin-top:8px;border:1px solid var(--bd);border-radius:6px;background:#fff}
+.tb{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}.tb th,.tb td{border-bottom:1px solid var(--bd);padding:7px 8px;text-align:left;vertical-align:top}.tb th{color:var(--mut);font-weight:600}
+#login{padding:16px}.wrap{overflow-x:auto}
+#paper{width:210mm;min-height:297mm;background:#fff;color:#000;padding:12mm 20mm 20mm;margin:0 auto;font:12pt/1.4 "Times New Roman",Times,serif;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+#paper .kop{display:block;width:calc(100% + 16mm);margin:0 -8mm 8mm}#paper .kopph{height:30mm;margin-bottom:8mm}
+#paper h2{text-align:center;font-size:14pt;margin:0 0 2px;text-decoration:underline}
+#paper .no{text-align:center;margin:0 0 14pt}#paper p{margin:0 0 10pt;text-align:justify;text-indent:12mm;white-space:pre-wrap}
+#paper p.ni{text-indent:0}#paper table{border-collapse:collapse;margin:0 0 10pt 10mm;width:calc(100% - 10mm)}
+#paper td{vertical-align:top;padding:1px 0}#paper td:nth-child(1){width:32mm}#paper td:nth-child(2){width:5mm}
+#paper .ttd{margin:18pt 0 0 auto;width:75mm;text-align:left}#paper .ttd img{display:block;max-height:28mm;max-width:60mm}
+#paper .sg{height:26mm;position:relative}#paper .sg img{position:absolute;left:0;top:0}#paper .sg img.st{left:18mm;opacity:.85}
+#paper mark.ph{background:#fde68a;color:#000}.cap #paper{box-shadow:none}.cap #paper mark.ph{background:none}
+@media print{@page{size:A4;margin:0}body{background:#fff}header,.form{display:none!important}main{display:block;padding:0}.preview{border:0;padding:0;background:none}.wrap{overflow:visible}#paper{box-shadow:none;margin:0}#paper mark.ph{background:none}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head><body>
+<div id="login"><div class="card" style="max-width:340px;margin:10vh auto"><h1>✉️ Master Surat</h1>
+<label>Username</label><input id="lu" autocomplete="username"><label>Password</label><input id="lp" type="password" autocomplete="current-password">
+<button class="b p" id="lg" style="width:100%;margin-top:14px">Masuk</button><div id="le" class="hint" style="color:#dc2626"></div></div></div>
+<div id="app" style="display:none">
+<header><h1>✉️ Master Surat</h1><div><span id="msg" style="font-size:13px;color:var(--pri);margin-right:8px"></span><span id="who" class="hint"></span> <button class="b" id="arsip">💾 Arsipkan</button> <button class="b p" id="print">Cetak</button> <button class="b" id="out">Keluar</button></div></header>
+<main>
+<section class="card form"><div class="steps" id="steps"></div><div id="form"></div><div class="nav"><button class="b" id="prev">← Kembali</button><button class="b p" id="next">Lanjut →</button></div></section>
+<section class="card preview"><div class="wrap"><div id="paper"></div></div></section>
+</main></div>
+<script>
+// ====== KONFIGURASI: tempel URL Web App Google Apps Script (berakhiran /exec) ======
+const API_URL='https://script.google.com/macros/s/AKfycbwJchgvrwEHZpQihsjtetuRqUEuFrJxqEG271lFAFs2JO1j9QozY8Izx_HfI4-dYI1paw/exec';
+// =====================================================================================
+const SIGNER=[['Nama','IRWANSYAH RAMDANI, S.S., M.Pd.'],['Jabatan','Kepala Madrasah'],['Alamat','Jl. Veteran No. 57 Rt. 019/005 Desa Cisaat Kec. Cisaat Kab. Sukabumi']];
+const SUBJ=[['Nama',''],['TTL',''],['NISN',''],['Alamat','']];
+const PENUTUP='Demikian surat ini kami buat dengan sebenar-benarnya untuk dipergunakan sebagaimana mestinya.';
+const CATS={
+kuliah:{n:'Rekomendasi Kuliah (Umum)',d:'Rekomendasi melanjutkan studi ke perguruan tinggi',title:'SURAT REKOMENDASI',intro:'Dengan ini memberikan rekomendasi kepada:',signerOn:1,subj:SUBJ,
+body:'Adalah benar merupakan peserta didik di MA Al Ma’tuq Tahun Pelajaran 2025/2026 yang telah menunjukkan prestasi akademik maupun non-akademik yang baik, berperilaku disiplin, bertanggung jawab, serta memiliki motivasi tinggi dalam melanjutkan pendidikan ke jenjang yang lebih tinggi.\n\nBerdasarkan penilaian tersebut, kami meyakini bahwa yang bersangkutan layak dan mampu untuk melanjutkan studi ke perguruan tinggi, baik di dalam negeri maupun di luar negeri.\n\nDemikian surat rekomendasi ini kami buat dengan sebenarnya untuk dapat dipergunakan sebagaimana mestinya. Atas perhatian dan kerja samanya, kami ucapkan terima kasih.'},
+beasiswa:{n:'Rekomendasi Beasiswa (TM)',d:'Rekomendasi beasiswa / bantuan biaya pendidikan',title:'SURAT REKOMENDASI',intro:'Dengan ini memberikan rekomendasi kepada:',signerOn:1,subj:SUBJ,
+body:'Adalah benar merupakan peserta didik di MA Al Ma’tuq Tahun Pelajaran 2025/2026. Melalui surat ini, kami bermaksud memberikan rekomendasi penuh kepada siswa/i tersebut untuk mendaftar program beasiswa/bantuan biaya pendidikan di instansi atau perguruan tinggi yang Bapak/Ibu pimpin.\n\nSelama menempuh pendidikan di sekolah kami, {panggilan} secara konsisten menunjukkan kemampuan akademik yang sangat baik, memiliki motivasi belajar yang tinggi, serta berkelakuan amat baik. Ia merupakan siswa/i yang tekun, disiplin, dan aktif dalam kegiatan pembelajaran maupun ekstrakurikuler.\n\nNamun demikian, berdasarkan data sekolah dan sepengetahuan kami, siswa/i tersebut memiliki keterbatasan ekonomi karena berasal dari keluarga kurang mampu. Kondisi finansial keluarganya saat ini menjadi kendala utama bagi yang bersangkutan untuk dapat mewujudkan cita-citanya melanjutkan pendidikan ke jenjang Perguruan Tinggi.\n\nMengingat potensi akademik dan karakter positif yang dimilikinya, kami sangat berharap Bapak/Ibu dapat mempertimbangkan {nama} sebagai salah satu penerima beasiswa atau bantuan pendidikan. Kami yakin ia akan memanfaatkan kesempatan tersebut dengan sebaik-baiknya dan terus mengukir prestasi yang membanggakan.\n\n'+PENUTUP},
+aktif:{n:'Keterangan Aktif Siswa',d:'Menerangkan siswa masih aktif belajar',title:'SURAT KETERANGAN',intro:'Menerangkan bahwa:',signerOn:1,subj:[['Nama',''],['NISN',''],['Kelas',''],['Alamat','']],
+body:'Adalah benar peserta didik yang masih aktif belajar di MA Al Ma’tuq Tahun Pelajaran 2025/2026.\n\n'+PENUTUP},
+umum:{n:'Surat Umum / Bebas',d:'Surat kosong: tujuan dan isi diketik sendiri',title:'SURAT',intro:'',signerOn:0,subj:[],body:'Dengan hormat,\n\n\n\n'+PENUTUP}};
+const BULAN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const STEPS=['Kategori','Kop','No. Surat','Identitas','Isi & Tujuan','Tanggal & TTD','Arsip'];
+const SETK=['tempat','jabatanTtd','namaTtd'];
+const iso=new Date().toISOString().slice(0,10);
+let S={cat:'kuliah',step:0,kop:'',ttd:'',stempel:'',nomor:'',tujuan:'',tempat:'Sukabumi',tanggal:iso,jabatanTtd:'Kepala MA Al-Ma’tuq',namaTtd:'Irwansyah Ramdani, S.S., M.Pd.',signer:JSON.parse(JSON.stringify(SIGNER))},A=[],TOKEN='',tm;
+try{TOKEN=localStorage.getItem('ms_token')||''}catch(e){}
+const $=s=>document.querySelector(s);
+const esc=t=>String(t??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function applyCat(c){const k=CATS[c];S.cat=c;S.title=k.title;S.intro=k.intro;S.signerOn=k.signerOn;S.subj=JSON.parse(JSON.stringify(k.subj));S.body=k.body}
+applyCat('kuliah');
+async function api(a,d={}){const r=await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:a,token:TOKEN,...d})});const j=await r.json();if(!j.ok){if(j.error=='SESI')showLogin();throw new Error(j.error)}return j.data}
+function showLogin(){$('#login').style.display='';$('#app').style.display='none'}
+function msg(t){const m=$('#msg');m.textContent=t;setTimeout(()=>m.textContent='',3000)}
+const saveSet=()=>{clearTimeout(tm);tm=setTimeout(()=>api('simpanPengaturan',{tempat:S.tempat,jabatanTtd:S.jabatanTtd,namaTtd:S.namaTtd,signer:S.signer}).catch(e=>msg(e.message)),900)};
+async function boot(){const m=await api('muat'),p=m.pengaturan||{};
+SETK.forEach(k=>{if(p[k])S[k]=p[k]});if(p.signer)try{S.signer=JSON.parse(p.signer)}catch(e){}
+S.kop=m.aset.kop||'';S.ttd=m.aset.ttd||'';S.stempel=m.aset.stempel||'';
+(m.jenis||[]).forEach(j=>CATS[j.kunci]={n:j.nama,d:j.deskripsi||'Jenis surat buatan sendiri',custom:1,title:j.judul,intro:j.pengantar,signerOn:+j.tampilPenandatangan,subj:JSON.parse(j.labelIdentitas||'[]'),body:j.isi});
+A=await api('listArsip');$('#login').style.display='none';$('#app').style.display='';$('#who').textContent=m.nama;form();preview()}
+$('#lg').onclick=async()=>{const b=$('#lg');$('#le').textContent='';if(API_URL.includes('GANTI')){$('#le').textContent='API_URL belum diisi di index.html';return}
+b.disabled=true;try{const r=await api('login',{username:$('#lu').value.trim(),password:$('#lp').value});TOKEN=r.token;try{localStorage.setItem('ms_token',TOKEN)}catch(e){}await boot()}catch(e){$('#le').textContent=e.message}b.disabled=false};
+$('#lp').onkeydown=e=>{if(e.key=='Enter')$('#lg').click()};
+$('#out').onclick=()=>{TOKEN='';try{localStorage.removeItem('ms_token')}catch(e){}showLogin()};
+const inp=(l,k,t='text')=>`<label>${l}</label><input type="${t}" data-k="${k}" value="${esc(S[k])}">`;
+const rows=(id,a)=>a.map((r,i)=>`<div class="row"><input data-r="${id}" data-i="${i}" data-j="0" value="${esc(r[0])}" placeholder="Label"><input data-r="${id}" data-i="${i}" data-j="1" value="${esc(r[1])}" placeholder="Isi"><button class="b" data-del="${id}" data-i="${i}">✕</button></div>`).join('')+`<button class="b" data-add="${id}">+ Tambah baris</button>`;
+const img=(l,k)=>`<label>${l}</label><input type="file" accept="image/*" data-img="${k}">${S[k]?`<img class="thumb" src="${S[k]}"><br><button class="b" data-clr="${k}" style="margin-top:6px">Hapus gambar</button>`:''}`;
+const pos=()=>/\{identitas\}/.test(S.body);
+function form(){let h='';
+if(S.step==0)h=`<label>Jenis surat</label><select data-catsel>${Object.entries(CATS).map(([k,v])=>`<option value='${k}' ${S.cat==k?'selected':''}>${esc(v.n)}</option>`).join('')}<option value='__new' ${S.cat=='__new'?'selected':''}>➕ Jenis surat baru…</option></select><p class='hint'>${S.cat=='__new'?'':esc((CATS[S.cat]||{}).d||'')}</p>`+(S.cat=='__new'?inp('Nama jenis surat baru','jenis')+'<p class="hint">Setelah diarsipkan, jenis ini otomatis masuk ke dropdown.</p>':'')+(CATS[S.cat]&&CATS[S.cat].custom?`<button class='b' data-delcat='${S.cat}'>Hapus jenis ini dari dropdown</button>`:'');
+if(S.step==1)h=img('Upload kop surat (gambar PNG/JPG, lebar penuh kertas)','kop')+'<p class="hint">Kop tersimpan di Google Drive dan dipakai untuk surat berikutnya.</p>';
+if(S.step==2)h=inp('Nomor surat','nomor')+inp('Judul surat','title');
+if(S.step==3)h=`<label><input type="checkbox" data-chk="signerOn" ${S.signerOn?'checked':''} style="width:auto"> Tampilkan identitas penandatangan di awal</label>`+(S.signerOn?'<label>Identitas pembuat surat</label>'+rows('signer',S.signer):'')+inp('Kalimat pengantar identitas penerima','intro')+'<label>Identitas penerima / siswa</label>'+rows('subj',S.subj)+`<label>Posisi identitas penerima</label><select data-pos><option value='awal' ${pos()?'':'selected'}>Sebelum isi surat</option><option value='tengah' ${pos()?'selected':''}>Di tengah paragraf</option></select>`;
+if(S.step==4)h=`<label>Tujuan surat (Kepada Yth.), opsional</label><textarea data-k="tujuan">${esc(S.tujuan)}</textarea><label>Isi / paragraf surat (pisahkan paragraf dengan baris kosong)</label><textarea data-k="body" style="min-height:260px">${esc(S.body)}</textarea><p class="hint">Klik untuk menyisipkan di posisi kursor. {identitas} = seluruh tabel identitas, lainnya = isi satu baris identitas.</p><div style="display:flex;gap:6px;flex-wrap:wrap">${['identitas',...S.subj.map(r=>r[0].trim().toLowerCase()).filter(Boolean),'panggilan'].map(k=>`<button class='b' data-ins='${esc(k)}' style='padding:4px 9px;font-size:12px'>{${esc(k)}}</button>`).join('')}</div><label>Data identitas (langsung terisi ke surat)</label>${rows('subj',S.subj)}`;
+if(S.step==5)h=inp('Tempat (titi mangsa)','tempat')+inp('Tanggal','tanggal','date')+inp('Jabatan pembuat surat','jabatanTtd')+inp('Nama pembuat surat','namaTtd')+img('Tanda tangan (gambar, opsional)','ttd')+img('Stempel (gambar PNG transparan, opsional)','stempel');
+if(S.step==6)h=arsipView();
+$('#form').innerHTML=h;$('.preview').style.display=S.step==6?'none':'';
+$('#steps').innerHTML=STEPS.map((s,i)=>`<button data-s="${i}" class="${i==S.step?'on':''}">${i<6?(i+1)+'. ':'📁 '}${s}${i==6?' ('+A.length+')':''}</button>`).join('');
+$('#prev').style.visibility=S.step?'visible':'hidden';$('#next').style.visibility=S.step<5?'visible':'hidden';}
+function arsipView(){const js=[...new Set(A.map(r=>r.jenis))],L=A.filter(r=>!S.af||r.jenis==S.af);
+return `<label>Filter jenis surat</label><select data-af><option value=''>Semua (${A.length})</option>${js.map(j=>`<option ${S.af==j?'selected':''}>${esc(j)}</option>`).join('')}</select>`+(L.length?`<div style='overflow-x:auto'><table class='tb'><tr><th>#</th><th>Jenis</th><th>Nama</th><th>No. Surat</th><th>Diarsipkan</th><th></th></tr>${L.map((r,i)=>`<tr><td>${i+1}</td><td>${esc(r.jenis)}</td><td>${esc(r.nama||'-')}</td><td>${esc(r.nomorSurat||'-')}</td><td>${esc(new Date(r.waktu).toLocaleString('id-ID'))}<div class='hint'>${esc(r.pembuat)}</div></td><td style='white-space:nowrap'><button class='b' data-pdf='${r.id}'>PDF</button> <button class='b p' data-open='${r.id}'>Buka</button> <button class='b' data-rm='${r.id}'>Hapus</button></td></tr>`).join('')}</table></div>`:'<p class="hint">Belum ada surat di arsip. Klik “💾 Arsipkan” setelah surat selesai.</p>')}
+function tgl(){const d=new Date(S.tanggal+'T00:00');return isNaN(d)?'':`${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`}
+const tbl=a=>a.filter(r=>r[0]).length?'<table>'+a.filter(r=>r[0]).map(r=>`<tr><td>${esc(r[0])}</td><td>:</td><td>${esc(r[1])}</td></tr>`).join('')+'</table>':'';
+function preview(){const nm=(S.subj.find(r=>/^nama$/i.test(r[0]))||[0,''])[1]||'[Nama Siswa]';
+const pg=nm.trim().split(/\s+/)[0].toLowerCase().replace(/^./,c=>c.toUpperCase());
+const rep=t=>t.replace(/\{([^{}]+)\}/g,(m,k)=>{k=k.trim().toLowerCase();if(k=='panggilan')return pg;const r=S.subj.find(r=>r[0].trim().toLowerCase()==k);return r?(r[1]||'\u2063['+r[0]+']\u2064'):m});
+const mid=pos();
+const body=S.body.split(/\n\s*\n/).filter(x=>x.trim()).map(x=>x.trim()=='{identitas}'?(S.intro?`<p class="ni">${esc(S.intro)}</p>`:'')+tbl(S.subj):`<p>${esc(rep(x.trim())).replace(/\u2063/g,'<mark class="ph">').replace(/\u2064/g,'</mark>')}</p>`).join('');
+$('#paper').innerHTML=(S.kop?`<img class="kop" src="${S.kop}">`:'<div class="kopph"></div>')+
+`<h2>${esc(S.title)}</h2>`+(S.nomor?`<div class="no">Nomor : ${esc(S.nomor)}</div>`:'<div class="no"></div>')+
+(S.tujuan?`<p class="ni">${esc(S.tujuan)}</p>`:'')+
+(S.signerOn?`<p class="ni">Yang bertandatangan di bawah ini :</p>${tbl(S.signer)}`:'')+
+(mid?'':(S.intro?`<p class="ni">${esc(S.intro)}</p>`:'')+tbl(S.subj))+body+
+`<div class="ttd"><div>${esc(S.tempat)}, ${tgl()}</div><div>${esc(S.jabatanTtd)}</div><div class="sg">${S.ttd?`<img src="${S.ttd}">`:''}${S.stempel?`<img class="st" src="${S.stempel}">`:''}</div><b>${esc(S.namaTtd)}</b></div>`;}
+async function bikinPDF(){document.body.classList.add('cap');try{const c=await html2canvas($('#paper'),{scale:2,backgroundColor:'#fff'});
+const pdf=new jspdf.jsPDF('p','mm','a4'),W=210,ph=c.width*297/W;
+for(let y=0,p=0;y<c.height-2;y+=ph,p++){const part=document.createElement('canvas');part.width=c.width;part.height=Math.min(ph,c.height-y);part.getContext('2d').drawImage(c,0,y,c.width,part.height,0,0,c.width,part.height);if(p)pdf.addPage();pdf.addImage(part.toDataURL('image/jpeg',.92),'JPEG',0,0,W,part.height*W/c.width)}
+return pdf.output('datauristring').split(',')[1]}finally{document.body.classList.remove('cap')}}
+async function arsip(){if(S.step==6)go(5);const nm=(S.cat=='__new'?S.jenis||'':CATS[S.cat].n).trim();if(!nm){msg('Isi nama jenis surat dulu');go(0);return}
+const b=$('#arsip');b.disabled=true;msg('Menyimpan ke Drive…');
+try{if(S.cat=='__new'||CATS[S.cat].custom){const k=S.cat=='__new'?'c_'+Date.now():S.cat,tpl={n:nm,d:'Jenis surat buatan sendiri',custom:1,title:S.title,intro:S.intro,signerOn:S.signerOn,subj:S.subj.map(r=>[r[0],'']),body:S.body};await api('simpanJenis',{kunci:k,tpl});CATS[k]=tpl;S.cat=k}
+const data={};['title','nomor','tujuan','intro','signerOn','signer','subj','body','tempat','tanggal','jabatanTtd','namaTtd'].forEach(k=>data[k]=S[k]);
+const n=(S.subj.find(r=>/^nama$/i.test(r[0]))||[0,''])[1];
+await api('arsipkan',{jenis:nm,kunci:S.cat,nama:n,nomor:S.nomor,data,pdf:await bikinPDF()});A=await api('listArsip');msg('Diarsipkan ke Drive ✓');form()}
+catch(e){msg('Gagal: '+e.message)}b.disabled=false}
+function go(n){S.step=Math.max(0,Math.min(6,n));form()}
+document.addEventListener('input',e=>{const t=e.target;
+if(t.dataset.k){S[t.dataset.k]=t.value}else if(t.dataset.r){S[t.dataset.r][t.dataset.i][t.dataset.j]=t.value}else return;
+if(SETK.includes(t.dataset.k)||t.dataset.r=='signer')saveSet();preview()});
+document.addEventListener('change',e=>{const t=e.target;
+if(t.dataset.chk){S[t.dataset.chk]=t.checked?1:0;form();preview()}
+if(t.dataset.catsel!==undefined){const v=t.value;if(v=='__new'){applyCat('umum');S.cat='__new';S.jenis='';S.title='SURAT'}else applyCat(v);form();preview()}
+if(t.dataset.pos!==undefined){const ps=S.body.split(/\n\s*\n/);if(t.value=='tengah'){if(!pos()){ps.splice(1,0,'{identitas}');S.body=ps.join('\n\n')}}else S.body=ps.filter(x=>x.trim()!='{identitas}').join('\n\n');form();preview()}
+if(t.dataset.af!==undefined){S.af=t.value;form()}
+if(t.dataset.img&&t.files[0]){const k=t.dataset.img,r=new FileReader();r.onload=()=>{S[k]=r.result;form();preview();api('simpanAset',{jenis:k,dataUrl:r.result}).then(()=>msg('Tersimpan di Drive ✓')).catch(e=>msg(e.message))};r.readAsDataURL(t.files[0])}});
+document.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
+try{
+if(d.ins){const ta=$('[data-k=body]'),tx=d.ins=='identitas'?'\n\n{identitas}\n\n':'{'+d.ins+'}',a=ta.selectionStart,b=ta.selectionEnd;ta.value=ta.value.slice(0,a)+tx+ta.value.slice(b);S.body=ta.value;ta.focus();ta.selectionStart=ta.selectionEnd=a+tx.length;preview()}
+else if(d.open){const r=await api('bukaArsip',{id:d.open});Object.assign(S,r.data);S.cat=CATS[r.cat]?r.cat:'__new';S.jenis=r.jenis;go(3);preview();msg('Surat dibuka dari arsip')}
+else if(d.pdf){msg('Mengunduh…');const r=await api('unduh',{id:d.pdf}),a=document.createElement('a');a.href='data:application/pdf;base64,'+r.pdf;a.download=r.nama;a.click();msg('')}
+else if(d.rm){if(confirm('Hapus surat ini dari arsip dan Drive?')){await api('hapusArsip',{id:d.rm});A=A.filter(x=>x.id!=d.rm);form()}}
+else if(d.delcat){await api('hapusJenis',{kunci:d.delcat});delete CATS[d.delcat];applyCat('kuliah');form();preview()}
+else if(d.s!==undefined)go(+d.s);
+else if(d.add){S[d.add].push(['','']);if(d.add=='signer')saveSet();form();preview()}
+else if(d.del){S[d.del].splice(+d.i,1);if(d.del=='signer')saveSet();form();preview()}
+else if(d.clr){S[d.clr]='';api('simpanAset',{jenis:d.clr,dataUrl:''}).catch(e=>msg(e.message));form();preview()}
+}catch(err){msg('Gagal: '+err.message)}});
+$('#prev').onclick=()=>go(S.step-1);$('#next').onclick=()=>go(S.step+1);
+$('#print').onclick=()=>{if(S.step==6)go(5);window.print()};$('#arsip').onclick=arsip;
+if(TOKEN&&!API_URL.includes('GANTI'))boot().catch(showLogin);
+</script></body></html>
