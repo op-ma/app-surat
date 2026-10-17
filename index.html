@@ -29,7 +29,7 @@ button.p{background:var(--pri);color:var(--prit);border-color:var(--pri);font-we
 #paper p.ni{text-indent:0}#paper table{border-collapse:collapse;margin:0 0 10pt 10mm;width:calc(100% - 10mm)}
 #paper td{vertical-align:top;padding:1px 0}#paper td:nth-child(1){width:32mm}#paper td:nth-child(2){width:5mm}
 #paper .ttd{margin:18pt 0 0 auto;width:75mm;text-align:left}#paper .ttd img{display:block;max-height:28mm;max-width:60mm}
-#paper .sg{height:22mm;position:relative;z-index:1}#paper .sg img{position:absolute;left:11mm;top:0;z-index:2;max-height:24mm;max-width:42mm}#paper .sg img.st{left:-19mm;top:-8mm;width:41mm;height:41mm;max-width:none;max-height:none;object-fit:contain;opacity:.85;z-index:1}#paper .ttd>div:not(.sg),#paper .ttd>b{position:relative;z-index:3}#paper p.sp{text-align-last:justify}
+#paper .sg{height:22mm;position:relative;z-index:1}#paper .sg img{position:absolute;left:11mm;top:-3mm;z-index:2;max-height:55mm;max-width:70mm}#paper .sg img.st{left:-19mm;top:-8mm;width:41mm;height:41mm;max-width:none;max-height:none;object-fit:contain;opacity:.85;z-index:1}#paper .ttd>div:not(.sg),#paper .ttd>b{position:relative;z-index:3}#paper p.sp{text-align-last:justify}
 #paper mark.ph{background:#fde68a;color:#000}.cap #paper .pg{box-shadow:none}.cap #paper mark.ph{background:none}
 @media print{@page{size:A4;margin:0}body{background:#fff}header,.form{display:none!important}main{display:block;padding:0}.preview{border:0;padding:0;background:none}.wrap{overflow:visible}#paper .pg{box-shadow:none;margin:0;height:296.5mm;break-after:page}#paper .pg:last-child{break-after:auto}#paper mark.ph{background:none}}
 </style>
@@ -78,7 +78,7 @@ const clrCache=()=>{try{Object.keys(localStorage).filter(x=>x.startsWith('ms_a_'
 const kecil=(d,max,jpg)=>new Promise((ok,no)=>{const im=new Image();im.onerror=no;im.onload=()=>{const s=Math.min(1,max/im.naturalWidth),c=document.createElement('canvas');c.width=im.naturalWidth*s;c.height=im.naturalHeight*s;const x=c.getContext('2d');if(jpg){x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height)}x.drawImage(im,0,0,c.width,c.height);ok(c.toDataURL(jpg?'image/jpeg':'image/png',.9))};im.src=d});
 async function muatAset(k,id){if(!id)return;let d='';try{d=localStorage.getItem('ms_a_'+id)||''}catch(e){}
 if(!d){try{d=await api('aset',{jenis:k});try{localStorage.setItem('ms_a_'+id,d)}catch(e){}}catch(e){return}}
-S[k]=d;if(k=='kop')setKop();if(S.step==1||S.step==5)form();if(S.step<6)preview()}
+S[k]=d;if(k=='kop')setKop();else setAR(k);if(S.step==1||S.step==5)form();if(S.step<6)preview()}
 async function boot(){const [m,ar]=await Promise.all([api('muat'),api('listArsip')]),p=m.pengaturan||{};
 SETK.forEach(k=>{if(p[k])S[k]=p[k]});if(p.signer)try{S.signer=JSON.parse(p.signer)}catch(e){}
 (m.jenis||[]).forEach(j=>CATS[j.kunci]={n:j.nama,d:j.deskripsi||'Jenis surat buatan sendiri',custom:1,title:j.judul,intro:j.pengantar,signerOn:+j.tampilPenandatangan,subj:JSON.parse(j.labelIdentitas||'[]'),body:j.isi});
@@ -108,17 +108,19 @@ return `<label>Filter jenis surat</label><select data-af><option value=''>Semua 
 function tgl(){const d=new Date(S.tanggal+'T00:00');return isNaN(d)?'':`${d.getDate()} ${BULAN[d.getMonth()]} ${d.getFullYear()}`}
 const tbl=a=>a.filter(r=>r[0]).length?'<table>'+a.filter(r=>r[0]).map(r=>`<tr><td>${esc(r[0])}</td><td>:</td><td>${esc(r[1])}</td></tr>`).join('')+'</table>':'';
 function setKop(){S.kopAR='';if(!S.kop)return;const im=new Image();im.onload=()=>{S.kopAR=im.naturalWidth+'/'+im.naturalHeight;preview()};im.src=S.kop}
+function setAR(k){const im=new Image();im.onload=()=>{S[k+'AR']=im.naturalWidth/im.naturalHeight;if(S.step<6)preview()};im.src=S[k]}
 const fmt=t=>esc(t).replace(/\u2063/g,'<mark class="ph">').replace(/\u2064/g,'</mark>');
 function preview(){const nm=(S.subj.find(r=>/^nama$/i.test(r[0]))||[0,''])[1]||'[Nama Siswa]';
 const pg=nm.trim().split(/\s+/)[0].toLowerCase().replace(/^./,c=>c.toUpperCase());
 const rep=t=>t.replace(/\{([^{}]+)\}/g,(m,k)=>{k=k.trim().toLowerCase();if(k=='panggilan')return pg;const r=S.subj.find(r=>r[0].trim().toLowerCase()==k);return r?(r[1]||'\u2063['+r[0].replace(/ /g,'\u00a0')+']\u2064'):m});
+let sig=S.ttd,stp=S.stempel;if(sig&&stp&&S.ttdAR&&S.stempelAR&&Math.abs(Math.log(S.ttdAR))<Math.abs(Math.log(S.stempelAR)))[sig,stp]=[stp,sig];
 const mid=pos(),intro=S.intro?`<p class="ni">${esc(S.intro)}</p>`:'',B=[];
 B.push({h:S.kop?`<img class="kop"${S.kopAR?` style="aspect-ratio:${S.kopAR}"`:''} src="${S.kop}">`:'<div class="kopph"></div>'},{h:`<h2>${esc(S.title)}</h2>`},{h:`<div class="no">${S.nomor?'Nomor : '+esc(S.nomor):''}</div>`});
 if(S.tujuan)B.push({h:`<p class="ni">${esc(S.tujuan)}</p>`});
 if(S.signerOn)B.push({h:'<p class="ni">Yang bertandatangan di bawah ini :</p>'},{h:tbl(S.signer)});
 if(!mid)B.push({h:intro},{h:tbl(S.subj)});
 S.body.split(/\n\s*\n/).filter(x=>x.trim()).forEach(x=>x.trim()=='{identitas}'?B.push({h:intro},{h:tbl(S.subj)}):B.push({p:rep(x.trim())}));
-B.push({h:`<div class="ttd"><div>${esc(S.tempat)}, ${tgl()}</div><div>${esc(S.jabatanTtd)}</div><div class="sg">${S.ttd?`<img src="${S.ttd}">`:''}${S.stempel?`<img class="st" src="${S.stempel}">`:''}</div><b>${esc(S.namaTtd)}</b></div>`});
+B.push({h:`<div class="ttd"><div>${esc(S.tempat)}, ${tgl()}</div><div>${esc(S.jabatanTtd)}</div><div class="sg">${sig?`<img src="${sig}">`:''}${stp?`<img class="st" src="${stp}">`:''}</div><b>${esc(S.namaTtd)}</b></div>`});
 paginate(B)}
 function paginate(B){const root=$('#paper');root.innerHTML='';
 const pr=document.createElement('div');pr.style.cssText='height:100mm;position:absolute;visibility:hidden';root.appendChild(pr);const MM=pr.offsetHeight/100;root.removeChild(pr);
@@ -154,7 +156,7 @@ if(t.dataset.chk){S[t.dataset.chk]=t.checked?1:0;form();preview()}
 if(t.dataset.catsel!==undefined){const v=t.value;if(v=='__new'){applyCat('umum');S.cat='__new';S.jenis='';S.title='SURAT'}else applyCat(v);form();preview()}
 if(t.dataset.pos!==undefined){const ps=S.body.split(/\n\s*\n/);if(t.value=='tengah'){if(!pos()){ps.splice(1,0,'{identitas}');S.body=ps.join('\n\n')}}else S.body=ps.filter(x=>x.trim()!='{identitas}').join('\n\n');form();preview()}
 if(t.dataset.af!==undefined){S.af=t.value;form()}
-if(t.dataset.img&&t.files[0]){const k=t.dataset.img,r=new FileReader();r.onload=async()=>{let d=r.result;try{d=await kecil(d,k=='kop'?1600:800,k=='kop')}catch(e){}S[k]=d;clrCache();if(k=='kop')setKop();form();preview();api('simpanAset',{jenis:k,dataUrl:d}).then(()=>msg('Tersimpan di Drive ✓')).catch(e=>msg(e.message))};r.readAsDataURL(t.files[0])}});
+if(t.dataset.img&&t.files[0]){const k=t.dataset.img,r=new FileReader();r.onload=async()=>{let d=r.result;try{d=await kecil(d,k=='kop'?1600:800,k=='kop')}catch(e){}S[k]=d;clrCache();if(k=='kop')setKop();else setAR(k);form();preview();api('simpanAset',{jenis:k,dataUrl:d}).then(()=>msg('Tersimpan di Drive ✓')).catch(e=>msg(e.message))};r.readAsDataURL(t.files[0])}});
 document.addEventListener('click',async e=>{const t=e.target.closest('button');if(!t)return;const d=t.dataset;
 try{
 if(d.ins){const ta=$('[data-k=body]'),tx=d.ins=='identitas'?'\n\n{identitas}\n\n':'{'+d.ins+'}',a=ta.selectionStart,b=ta.selectionEnd;ta.value=ta.value.slice(0,a)+tx+ta.value.slice(b);S.body=ta.value;ta.focus();ta.selectionStart=ta.selectionEnd=a+tx.length;preview()}
